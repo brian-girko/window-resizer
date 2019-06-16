@@ -1,6 +1,31 @@
 /* globals Sortable */
 'use strict';
 
+
+// Firefox polyfill
+chrome.system = chrome.system || {
+  display: {
+    getInfo(flags, callback) {
+      chrome.runtime.getBackgroundPage(bg => {
+        callback([{
+          bounds: {
+            top: bg.screen.top,
+            left: bg.screen.left,
+            width: bg.screen.width,
+            height: bg.screen.height
+          },
+          workArea: {
+            top: bg.screen.top,
+            left: bg.screen.left,
+            width: bg.screen.width,
+            height: bg.screen.height
+          }
+        }]);
+      });
+    }
+  }
+};
+
 var template = document.getElementById('template');
 var prefs = {
   color: 'rgba(0, 0, 255, 0.1)',
