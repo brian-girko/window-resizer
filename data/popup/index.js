@@ -26,8 +26,8 @@ chrome.system = chrome.system || {
   }
 };
 
-var template = document.getElementById('template');
-var prefs = {
+const template = document.getElementById('template');
+const prefs = {
   color: 'rgba(0, 0, 255, 0.1)',
   entries: [{
     size: [0, 100, 100, 0]
@@ -50,7 +50,7 @@ var prefs = {
   }]
 };
 
-var add = ({
+const add = ({
   size: [top, right, bottom, left]
 }) => {
   const clone = document.importNode(template.content, true);
@@ -76,7 +76,7 @@ var add = ({
   document.getElementById('monitor').appendChild(clone);
 };
 
-chrome.storage.local.get(prefs, ps => {
+document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(prefs, ps => {
   Object.assign(prefs, ps);
 
   prefs.entries.forEach(add);
@@ -93,7 +93,7 @@ chrome.storage.local.get(prefs, ps => {
       }
     }
   });
-});
+}));
 
 document.addEventListener('click', e => {
   const command = e.target.dataset.command;
@@ -165,21 +165,30 @@ document.addEventListener('transitionend', e => {
     prefs.entries.push(object);
     chrome.storage.local.set(prefs, () => add(object));
   });
+
+  // displays
+  chrome.system.display.getInfo({}, info => {
+    const select = document.getElementById('display');
+
+    for (const o of info) {
+      const option = document.createElement('option');
+      option.textContent = o.bounds.width + '×' + o.bounds.height;
+      option.value = JSON.stringify(o.workArea);
+
+      select.appendChild(option);
+    }
+    for (const o of info) {
+      if (o.workArea.left === screen.availLeft && o.workArea.top === screen.availTop) {
+        select.options[info.indexOf(o)].selected = true;
+
+        chrome.windows.getCurrent(win => {
+          left.value = Math.round((win.left - o.workArea.left) / o.workArea.width * 100);
+          right.value = Math.round((win.left - o.workArea.left + win.width) / o.workArea.width * 100);
+          top.value = Math.round((win.top - o.workArea.top) / o.workArea.height * 100);
+          bottom.value = Math.round((win.top - o.workArea.top + win.height) / o.workArea.height * 100);
+        });
+      }
+    }
+  });
 }
 
-// display
-chrome.system.display.getInfo({}, info => {
-  const select = document.getElementById('display');
-  for (const o of info) {
-    const option = document.createElement('option');
-    option.textContent = o.bounds.width + '×' + o.bounds.height;
-    option.value = JSON.stringify(o.workArea);
-
-    select.appendChild(option);
-  }
-  for (const o of info) {
-    if (o.workArea.left === screen.availLeft && o.workArea.top === screen.availTop) {
-      select.options[info.indexOf(o)].selected = true;
-    }
-  }
-});
