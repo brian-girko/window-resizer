@@ -1,25 +1,21 @@
 /* globals Sortable */
 'use strict';
 
-
 // Firefox polyfill
 chrome.system = chrome.system || {
   display: {
     getInfo(flags, callback) {
+      const obj = {};
       chrome.runtime.getBackgroundPage(bg => {
+        Object.assign(obj, {
+          top: bg.screen.top,
+          left: bg.screen.left,
+          width: bg.screen.width,
+          height: bg.screen.height
+        });
         callback([{
-          bounds: {
-            top: bg.screen.top,
-            left: bg.screen.left,
-            width: bg.screen.width,
-            height: bg.screen.height
-          },
-          workArea: {
-            top: bg.screen.top,
-            left: bg.screen.left,
-            width: bg.screen.width,
-            height: bg.screen.height
-          }
+          bounds: obj,
+          workArea: obj
         }]);
       });
     }
@@ -145,13 +141,13 @@ document.addEventListener('transitionend', e => {
     const tv = Number(top.value);
 
     if (e.target.name === 'left' && rv) {
-      e.target.setCustomValidity(lv > rv ? 'Need to be smaller than the right percent' : '');
+      e.target.setCustomValidity(lv >= rv ? 'Need to be smaller than the right percent' : '');
     }
     if (e.target.name === 'right' && lv) {
       e.target.setCustomValidity(rv < lv ? 'Need to be bigger than the left percent' : '');
     }
     if (e.target.name === 'top' && bv) {
-      e.target.setCustomValidity(tv > bv ? 'Need to be smaller than the bottom percent' : '');
+      e.target.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom percent' : '');
     }
     if (e.target.name === 'bottom' && tv) {
       e.target.setCustomValidity(bv < tv ? 'Need to be bigger than the top percent' : '');
@@ -177,18 +173,16 @@ document.addEventListener('transitionend', e => {
 
       select.appendChild(option);
     }
-    for (const o of info) {
-      if (o.workArea.left === screen.availLeft && o.workArea.top === screen.availTop) {
-        select.options[info.indexOf(o)].selected = true;
-
-        chrome.windows.getCurrent(win => {
-          left.value = Math.round((win.left - o.workArea.left) / o.workArea.width * 100);
-          right.value = Math.round((win.left - o.workArea.left + win.width) / o.workArea.width * 100);
-          top.value = Math.round((win.top - o.workArea.top) / o.workArea.height * 100);
-          bottom.value = Math.round((win.top - o.workArea.top + win.height) / o.workArea.height * 100);
-        });
-      }
-    }
+    const fix = n => Math.max(0, Math.min(100, n));
+    const o = info.filter(o => o.workArea.left === screen.availLeft && o.workArea.top === screen.availTop).shift() ||
+      info[0];
+    select.options[info.indexOf(o)].selected = true;
+    chrome.windows.getCurrent(win => {
+      left.value = fix(Math.round((win.left - o.workArea.left) / o.workArea.width * 100));
+      right.value = fix(Math.round((win.left - o.workArea.left + win.width) / o.workArea.width * 100));
+      top.value = fix(Math.round((win.top - o.workArea.top) / o.workArea.height * 100));
+      bottom.value = fix(Math.round((win.top - o.workArea.top + win.height) / o.workArea.height * 100));
+    });
   });
 }
 
