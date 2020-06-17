@@ -68,10 +68,16 @@ input[type=submit] {
   background-color: #e6e9ff;
   margin-top: 10px;
   border: none;
+  cursor: pointer;
 }
 input[type=number] {
   border: none;
   background-color: #e6e9ff;
+  padding: 5px;
+}
+select {
+  border: none;
+  background-color: #e6e9fe;
   padding: 5px;
 }
 #add td:last-child {

@@ -140,17 +140,11 @@ document.addEventListener('transitionend', e => {
     const bv = Number(bottom.value);
     const tv = Number(top.value);
 
-    if (e.target.name === 'left' && rv) {
-      e.target.setCustomValidity(lv >= rv ? 'Need to be smaller than the right percent' : '');
+    if (isNaN(lv) === false && isNaN(rv) === false) {
+      left.setCustomValidity(lv >= rv ? 'Need to be smaller than the right percent' : '');
     }
-    if (e.target.name === 'right' && lv) {
-      e.target.setCustomValidity(rv < lv ? 'Need to be bigger than the left percent' : '');
-    }
-    if (e.target.name === 'top' && bv) {
-      e.target.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom percent' : '');
-    }
-    if (e.target.name === 'bottom' && tv) {
-      e.target.setCustomValidity(bv < tv ? 'Need to be bigger than the top percent' : '');
+    if (isNaN(tv) === false && isNaN(bv) === false) {
+      top.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom percent' : '');
     }
   });
   document.getElementById('add').addEventListener('submit', e => {
@@ -165,6 +159,7 @@ document.addEventListener('transitionend', e => {
   // displays
   chrome.system.display.getInfo({}, info => {
     const select = document.getElementById('display');
+    console.log(info);
 
     for (const o of info) {
       const option = document.createElement('option');
@@ -174,10 +169,15 @@ document.addEventListener('transitionend', e => {
       select.appendChild(option);
     }
     const fix = n => Math.max(0, Math.min(100, n));
-    const o = info.filter(o => o.workArea.left === screen.availLeft && o.workArea.top === screen.availTop).shift() ||
-      info[0];
-    select.options[info.indexOf(o)].selected = true;
     chrome.windows.getCurrent(win => {
+      const o = info.filter(o => {
+        return win.left >= o.workArea.left &&
+          win.top >= o.workArea.top &&
+          win.width <= o.workArea.width &&
+          win.height <= o.workArea.height;
+      }).shift() || info[0];
+      select.options[info.indexOf(o)].selected = true;
+
       left.value = fix(Math.round((win.left - o.workArea.left) / o.workArea.width * 100));
       right.value = fix(Math.round((win.left - o.workArea.left + win.width) / o.workArea.width * 100));
       top.value = fix(Math.round((win.top - o.workArea.top) / o.workArea.height * 100));

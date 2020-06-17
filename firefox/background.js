@@ -41,6 +41,28 @@ chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
   }
 }));
 
+// startup
+chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
+  'startup-size': []
+}, prefs => {
+  if (prefs['startup-size'].length) {
+    chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    }, tabs => {
+      if (tabs.length) {
+        const [top, right, bottom, left] = prefs['startup-size'];
+        chrome.windows.update(tabs[0].windowId, {
+          left: parseInt(screen.availLeft + Number(left) / 100 * screen.availWidth),
+          top: parseInt(screen.availTop + Number(top) / 100 * screen.availHeight),
+          width: parseInt(Number(right - left) / 100 * screen.availWidth),
+          height: parseInt(Number(bottom - top) / 100 * screen.availHeight)
+        });
+      }
+    });
+  }
+}));
+
 /* FAQs & Feedback */
 {
   const {management, runtime: {onInstalled, setUninstallURL, getManifest}, storage, tabs} = chrome;
