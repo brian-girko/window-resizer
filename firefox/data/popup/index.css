@@ -58,12 +58,21 @@ body[data-add=false] #add {
   margin-left: -130px;
   opacity: 0;
 }
+#guide {
+  text-align: center;
+  font-size: 10px;
+}
 input[type=submit] {
   width: 100%;
   padding: 10px;
   background-color: #e6e9ff;
   margin-top: 10px;
   border: none;
+}
+input[type=number] {
+  border: none;
+  background-color: #e6e9ff;
+  padding: 5px;
 }
 #add td:last-child {
   text-align: right;

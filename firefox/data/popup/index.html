@@ -17,23 +17,24 @@
   <div id="monitor"></div>
   <div id="sidebar">
     <div style="white-space: nowrap">Display: <select id="display"></select></div>
+    <p id="guide">(Top, Left) - (Bottom, Right)</p>
     <form id="add">
       <table>
         <tr>
-          <td>Left</td>
-          <td><input type="number" required name="left" min=0 max=100>%</td>
-        </tr>
-        <tr>
-          <td>Right</td>
-          <td><input type="number" required name="right" min=0 max=100>%</td>
-        </tr>
-        <tr>
           <td>Top</td>
-          <td><input type="number" required name="top" min=0 max=100>%</td>
+          <td><input type="number" required name="top" min=0 max=100> %</td>
+        </tr>
+        <tr>
+          <td>Left</td>
+          <td><input type="number" required name="left" min=0 max=100> %</td>
         </tr>
         <tr>
           <td>Bottom</td>
-          <td><input type="number" required name="bottom" min=0 max=100>%</td>
+          <td><input type="number" required name="bottom" min=0 max=100> %</td>
+        </tr>
+        <tr>
+          <td>Right</td>
+          <td><input type="number" required name="right" min=0 max=100> %</td>
         </tr>
       </table>
       <input type="submit" value="Add">
