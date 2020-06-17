@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(pre
 
   prefs.entries.forEach(add);
   Sortable.create(document.getElementById('monitor'), {
-    handle: 'svg',
+    handle: '.dragable',
     animation: 150,
     store: {
       set(sortable) {
