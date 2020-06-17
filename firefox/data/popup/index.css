@@ -3,6 +3,8 @@ body {
   font-size: 13px;
   display: flex;
   margin: 10px;
+  background-color: #fff;
+  color: #4d5156;
 }
 
 #monitor {
@@ -48,6 +50,8 @@ body {
   border-left: solid 1px #ccc;
   padding: 0 0 0 10px;
   margin-left: 10px;
+  display: grid;
+  grid-template-rows: min-content min-content min-content 1fr min-content;
 }
 #add {
   display: flex;
@@ -62,6 +66,7 @@ body[data-add=false] #add {
   text-align: center;
   font-size: 10px;
 }
+input[type=button],
 input[type=submit] {
   width: 100%;
   padding: 10px;
@@ -69,6 +74,7 @@ input[type=submit] {
   margin-top: 10px;
   border: none;
   cursor: pointer;
+  align-self: end;
 }
 input[type=number] {
   border: none;

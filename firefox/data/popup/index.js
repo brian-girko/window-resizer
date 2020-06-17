@@ -186,3 +186,4 @@ document.addEventListener('transitionend', e => {
   });
 }
 
+document.getElementById('options').addEventListener('click', () => chrome.runtime.openOptionsPage());
