@@ -5,18 +5,25 @@
 chrome.system = chrome.system || {
   display: {
     getInfo(flags, callback) {
-      const obj = {};
-      chrome.runtime.getBackgroundPage(bg => {
-        Object.assign(obj, {
-          top: bg.screen.top,
-          left: bg.screen.left,
-          width: bg.screen.width,
-          height: bg.screen.height
-        });
-        callback([{
-          bounds: obj,
-          workArea: obj
-        }]);
+      Promise.all([
+        new Promise(resolve => setTimeout(() => resolve(screen), 200)),
+        new Promise(resolve => chrome.runtime.getBackgroundPage(bg => {
+          resolve(bg.screen);
+        }))
+      ]).then(([a, b]) => {
+        callback([a, b].map(a => {
+          const obj = {};
+          Object.assign(obj, {
+            width: a.availWidth,
+            height: a.availHeight,
+            top: a.availTop,
+            left: a.availLeft
+          });
+          return {
+            bounds: obj,
+            workArea: obj
+          };
+        }));
       });
     }
   }
@@ -109,19 +116,14 @@ document.addEventListener('click', e => {
   else if (command === 'change') {
     const [top, right, bottom, left] = e.target.dataset.id.split(',');
     const display = JSON.parse(document.getElementById('display').value);
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, tabs => {
-      if (tabs.length) {
-        chrome.windows.update(tabs[0].windowId, {
-          left: parseInt(display.left + Number(left) / 100 * display.width),
-          top: parseInt(display.top + Number(top) / 100 * display.height),
-          width: parseInt(Number(right - left) / 100 * display.width),
-          height: parseInt(Number(bottom - top) / 100 * display.height)
-        });
-      }
-    });
+
+    chrome.runtime.sendMessage({
+      method: 'resize',
+      left: parseInt(display.left + Number(left) / 100 * display.width),
+      top: parseInt(display.top + Number(top) / 100 * display.height),
+      width: parseInt(Number(right - left) / 100 * display.width),
+      height: parseInt(Number(bottom - top) / 100 * display.height)
+    }, () => window.close());
   }
 });
 document.addEventListener('transitionend', e => {
@@ -134,7 +136,7 @@ document.addEventListener('transitionend', e => {
   const top = document.querySelector('#add [name=top]');
   const bottom = document.querySelector('#add [name=bottom]');
 
-  document.getElementById('add').addEventListener('input', e => {
+  document.getElementById('add').addEventListener('input', () => {
     const rv = Number(right.value);
     const lv = Number(left.value);
     const bv = Number(bottom.value);
@@ -159,7 +161,6 @@ document.addEventListener('transitionend', e => {
   // displays
   chrome.system.display.getInfo({}, info => {
     const select = document.getElementById('display');
-    console.log(info);
 
     for (const o of info) {
       const option = document.createElement('option');
@@ -170,12 +171,14 @@ document.addEventListener('transitionend', e => {
     }
     const fix = n => Math.max(0, Math.min(100, n));
     chrome.windows.getCurrent(win => {
+      // top right position must be within the window (position of the action button)
       const o = info.filter(o => {
-        return win.left >= o.workArea.left &&
-          win.top >= o.workArea.top &&
-          win.width <= o.workArea.width &&
-          win.height <= o.workArea.height;
+        const x = win.left + win.width;
+        const y = win.top;
+        return x >= o.workArea.left && x <= o.workArea.left + o.workArea.width &&
+          y >= o.workArea.top && y <= o.workArea.top + o.workArea.height;
       }).shift() || info[0];
+
       select.options[info.indexOf(o)].selected = true;
 
       left.value = fix(Math.round((win.left - o.workArea.left) / o.workArea.width * 100));
@@ -187,3 +190,6 @@ document.addEventListener('transitionend', e => {
 }
 
 document.getElementById('options').addEventListener('click', () => chrome.runtime.openOptionsPage());
+document.getElementById('test').addEventListener('click', () => chrome.tabs.create({
+  url: 'https://webbrowsertools.com/screen-size/'
+}));
