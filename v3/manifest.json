@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "version": "0.2.0",
+  "name": "Window Resizer",
+  "description": "__MSG_description__",
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "system.display"
+  ],
+  "icons": {
+    "16": "data/icons/16.png",
+    "32": "data/icons/32.png",
+    "48": "data/icons/48.png",
+    "64": "data/icons/64.png",
+    "128": "data/icons/128.png",
+    "256": "data/icons/256.png",
+    "512": "data/icons/512.png"
+  },
+  "action": {
+    "default_popup": "data/popup/index.html"
+  },
+  "homepage_url": "https://add0n.com/window-resizer.html",
+  "background": {
+    "service_worker": "worker.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "description": "Press the action button"
+    },
+    "layout-0": {
+      "description": "Use the first popup alignment to adjust the current window size"
+    },
+    "layout-1": {
+      "description": "Use the second popup alignment to adjust the current window size"
+    },
+    "layout-2": {
+      "description": "Use the third popup alignment to adjust the current window size"
+    },
+    "layout-3": {
+      "description": "Use the forth popup alignment to adjust the current window size"
+    },
+    "layout-4": {
+      "description": "Use the fifth popup alignment to adjust the current window size"
+    }
+  },
+  "options_ui": {
+    "page": "data/options/index.html"
+  }
+}

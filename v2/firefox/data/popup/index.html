@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+  <template id="template">
+    <div data-command="change" class="dragable">
+      <input type="button" data-command="remove">
+      <svg width="128" height="128" viewBox="0 0 512 512">
+        <path d="M 496,334 V 46 H 16 v 288 h 175 v 16 h -64 v 16 H 384 V 350 H 320 V 334 Z M 32,62 H 480 V 318 H 32 Z"></path>
+        <rect x="32px" y="62px" width="448px" height="256px" fill="#fff"></rect>
+      </svg>
+    </div>
+  </template>
+  <div id="monitor"></div>
+  <div id="sidebar">
+    <div style="white-space: nowrap">Display: <select id="display"></select></div>
+    <p id="guide">(Top, Left) - (Bottom, Right)</p>
+    <form id="add">
+      <table>
+        <tr>
+          <td>Top</td>
+          <td><input type="number" required name="top" min=0 max=100> %</td>
+        </tr>
+        <tr>
+          <td>Left</td>
+          <td><input type="number" required name="left" min=0 max=100> %</td>
+        </tr>
+        <tr>
+          <td>Bottom</td>
+          <td><input type="number" required name="bottom" min=0 max=100> %</td>
+        </tr>
+        <tr>
+          <td>Right</td>
+          <td><input type="number" required name="right" min=0 max=100> %</td>
+        </tr>
+      </table>
+      <input type="submit" value="Add">
+    </form>
+    <input type="button" value="Check" id="test" title="Check the current screen size and more">
+    <input type="button" value="Options" id="options">
+  </div>
+
+  <script type="text/javascript" src="Sortable.js"></script>
+  <script type="text/javascript" src="index.js"></script>
+</body>
+</html>
