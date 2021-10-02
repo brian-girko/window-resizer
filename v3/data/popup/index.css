@@ -5,6 +5,7 @@ body {
   margin: 10px;
   background-color: #fff;
   color: #4d5156;
+  min-width: fit-content;
 }
 
 #monitor {
