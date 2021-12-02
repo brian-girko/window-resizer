@@ -1,15 +1,34 @@
 'use strict';
 
-const box = {
-  width: 300,
-  height: 300,
-  left: 0,
-  top: 0,
-  type: 'popup'
+const resize = (id, top, right, bottom, left) => {
+  const box = {
+    left: parseInt(screen.availLeft + Number(left) / 100 * screen.availWidth),
+    top: parseInt(screen.availTop + Number(top) / 100 * screen.availHeight),
+    width: parseInt(Number(right - left) / 100 * screen.availWidth),
+    height: parseInt(Number(bottom - top) / 100 * screen.availHeight)
+  };
+
+  chrome.storage.local.get({
+    'Win': {
+      pw: 16,
+      ph: 14
+    }
+  }, prefs => {
+    const padding = prefs[navigator.platform.substr(0, 3)];
+    if (padding) {
+      box.left -= padding.pw / 2;
+      box.width += padding.pw;
+      box.height += padding.ph / 2;
+    }
+    chrome.windows.update(id, {
+      state: 'normal',
+      ...box
+    });
+  });
 };
 
 chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
-  entries: [{
+  'entries': [{
     size: [0, 100, 100, 0]
   }, {
     size: [0, 50, 50, 0]
@@ -38,17 +57,7 @@ chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
     }, tabs => {
       if (tabs.length) {
         const [top, right, bottom, left] = entry.size;
-        const args = new URLSearchParams();
-        args.append('id', tabs[0].windowId);
-        args.append('top', top);
-        args.append('left', left);
-        args.append('right', right);
-        args.append('bottom', bottom);
-
-        chrome.windows.create({
-          url: '/data/commander/index.html?' + args.toString(),
-          ...box
-        });
+        resize(tabs[0].windowId, top, right, bottom, left);
       }
     });
   }
@@ -89,17 +98,7 @@ chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
       if (tabs.length) {
         const [top, right, bottom, left] = prefs['startup-size'];
 
-        const args = new URLSearchParams();
-        args.append('id', tabs[0].windowId);
-        args.append('top', top);
-        args.append('left', left);
-        args.append('right', right);
-        args.append('bottom', bottom);
-
-        chrome.windows.create({
-          url: '/data/commander/index.html?' + args.toString(),
-          ...box
-        });
+        resize(tabs[0].windowId, top, right, bottom, left);
       }
     });
   }

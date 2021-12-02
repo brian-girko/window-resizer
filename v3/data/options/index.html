@@ -7,34 +7,32 @@
 <body>
   <form>
     <p>Resize active window on browser or extension restarts:</p>
-    <table>
-      <tr>
-        <td>Top</td>
-        <td><input type="number" required name="top" min=0 max=100> %</td>
-      </tr>
-      <tr>
-        <td>Left</td>
-        <td><input type="number" required name="left" min=0 max=100> %</td>
-      </tr>
-      <tr>
-        <td>Bottom</td>
-        <td><input type="number" required name="bottom" min=0 max=100> %</td>
-      </tr>
-      <tr>
-        <td>Right</td>
-        <td><input type="number" required name="right" min=0 max=100> %</td>
-      </tr>
-    </table>
+    <div class="box">
+      <input type="number" required name="top" min=0 max=100 placeholder="Top">
+      %
+      <input type="number" required name="left" min=0 max=100 placeholder="Left">
+      %
+      <input type="number" required name="bottom" min=0 max=100 placeholder="Bottom">
+      %
+      <input type="number" required name="right" min=0 max=100 placeholder="Right">
+      %
+    </div>
+
+    <p>
+      <input type="button" id="unset" value="Unset" title="Do not resize on startup">
+      <input type="submit" value="Save Startup Resizing">
+      <span id="toast"></span>
+    </p>
+
+    <p class="two">
+      <input type="checkbox" id="validate">
+      <label for="validate">Allow negative percents for margins</label>
+    </p>
 
     <p>
       <input type="button" id="support" value="Support Development">
       <input type="button" id="reset" value="Factory Reset">
-    </p>
-    <p>
       <input type="button" id="preview" value="YouTube Preview">
-      <input type="button" id="unset" value="Unset" title="Do not resize on startup">
-      <input type="submit" value="Save Options">
-      <span id="toast"></span>
     </p>
   </form>
   <script type="text/javascript" src="index.js"></script>

@@ -22,7 +22,8 @@ const prefs = {
     size: [0, 50, 100, 0]
   }, {
     size: [0, 100, 100, 50]
-  }]
+  }],
+  validate: true
 };
 
 const add = ({
@@ -53,6 +54,21 @@ const add = ({
 
 document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(prefs, ps => {
   Object.assign(prefs, ps);
+
+  if (prefs.validate === false) {
+    const left = document.querySelector('#add [name=left]');
+    left.removeAttribute('min');
+    left.removeAttribute('max');
+    const right = document.querySelector('#add [name=right]');
+    right.removeAttribute('min');
+    right.removeAttribute('max');
+    const top = document.querySelector('#add [name=top]');
+    top.removeAttribute('min');
+    top.removeAttribute('max');
+    const bottom = document.querySelector('#add [name=bottom]');
+    bottom.removeAttribute('min');
+    bottom.removeAttribute('max');
+  }
 
   prefs.entries.forEach(add);
   Sortable.create(document.getElementById('monitor'), {
