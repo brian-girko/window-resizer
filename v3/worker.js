@@ -57,7 +57,21 @@ chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
     }, tabs => {
       if (tabs.length) {
         const [top, right, bottom, left] = entry.size;
-        resize(tabs[0].windowId, top, right, bottom, left);
+        const args = new URLSearchParams();
+        args.append('id', tabs[0].windowId);
+        args.append('top', top);
+        args.append('left', left);
+        args.append('right', right);
+        args.append('bottom', bottom);
+
+        chrome.windows.create({
+          url: '/data/commander/index.html?' + args.toString(),
+          width: 300,
+          height: 300,
+          left: 0,
+          top: 0,
+          type: 'popup'
+        });
       }
     });
   }
