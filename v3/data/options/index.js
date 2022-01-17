@@ -115,3 +115,48 @@ document.addEventListener('input', () => {
     r.top.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom percent' : '');
   }
 });
+
+// export
+document.getElementById('export').addEventListener('click', () => {
+  chrome.storage.local.get(null, prefs => {
+    const text = JSON.stringify(prefs, null, '  ');
+    const blob = new Blob([text], {type: 'application/json'});
+    const objectURL = URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'), {
+      href: objectURL,
+      type: 'application/json',
+      download: 'window-resizer-preferences.json'
+    }).dispatchEvent(new MouseEvent('click'));
+    setTimeout(() => URL.revokeObjectURL(objectURL));
+  });
+});
+
+// import
+document.getElementById('import').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.style.display = 'none';
+  input.type = 'file';
+  input.accept = '.json';
+  input.acceptCharset = 'utf-8';
+
+  document.body.appendChild(input);
+  input.initialValue = input.value;
+  input.onchange = readFile;
+  input.click();
+
+  function readFile() {
+    if (input.value !== input.initialValue) {
+      const file = input.files[0];
+      if (file.size > 100e6) {
+        return console.warn('The file is too large!');
+      }
+      const reader = new FileReader();
+      reader.onloadend = e => {
+        input.remove();
+        const json = JSON.parse(e.target.result);
+        chrome.storage.local.set(json, () => chrome.runtime.reload());
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+  }
+});
