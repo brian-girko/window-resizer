@@ -26,11 +26,26 @@ const prefs = {
   validate: true
 };
 
+const counter = () => {
+  document.documentElement.style.setProperty('--cols', document.querySelectorAll('.dragable').length);
+};
+
 const add = ({
   size: [top, right, bottom, left]
-}) => {
+}, scroll = false) => {
+  const id = [top, right, bottom, left].join(',');
+
+  const e = document.querySelector(`[data-id="${id}"]`);
+  if (e) {
+    if (scroll) {
+      e.scrollIntoView();
+    }
+    return;
+  }
+
   const clone = document.importNode(template.content, true);
-  clone.querySelector('div').dataset.id = [top, right, bottom, left].join(',');
+  const div = clone.querySelector('div');
+  div.dataset.id = id;
   const svg = clone.querySelector('svg');
 
   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -50,9 +65,12 @@ const add = ({
   svg.appendChild(text);
 
   document.getElementById('monitor').appendChild(clone);
+  if (scroll) {
+    div.scrollIntoView();
+  }
 };
 
-document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(prefs, ps => {
+chrome.storage.local.get(prefs, ps => {
   Object.assign(prefs, ps);
 
   if (prefs.validate === false) {
@@ -70,7 +88,9 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(pre
     bottom.removeAttribute('max');
   }
 
-  prefs.entries.forEach(add);
+  prefs.entries.forEach(o => add(o));
+  counter();
+
   Sortable.create(document.getElementById('monitor'), {
     handle: '.dragable',
     animation: 150,
@@ -84,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => chrome.storage.local.get(pre
       }
     }
   });
-}));
+});
 
 document.addEventListener('click', e => {
   const command = e.target.dataset.command;
@@ -95,7 +115,10 @@ document.addEventListener('click', e => {
       return size[3] !== left || size[0] !== top || size[2] !== bottom || size[1] !== right;
     });
     if (prefs.entries.length > 0) {
-      chrome.storage.local.set(prefs, () => target.remove());
+      chrome.storage.local.set(prefs, () => {
+        target.remove();
+        counter();
+      });
     }
     else {
       alert('Cannot remove the last entry');
@@ -142,10 +165,10 @@ document.addEventListener('transitionend', e => {
   const bottom = document.querySelector('#add [name=bottom]');
 
   document.getElementById('add').addEventListener('input', () => {
-    const rv = Number(right.value);
-    const lv = Number(left.value);
-    const bv = Number(bottom.value);
-    const tv = Number(top.value);
+    const rv = right.valueAsNumber;
+    const lv = left.valueAsNumber;
+    const bv = bottom.valueAsNumber;
+    const tv = top.valueAsNumber;
 
     if (isNaN(lv) === false && isNaN(rv) === false) {
       left.setCustomValidity(lv >= rv ? 'Need to be smaller than the right percent' : '');
@@ -157,10 +180,13 @@ document.addEventListener('transitionend', e => {
   document.getElementById('add').addEventListener('submit', e => {
     e.preventDefault();
     const object = {
-      size: [top.value, right.value, bottom.value, left.value].map(Number)
+      size: [top.valueAsNumber, right.valueAsNumber, bottom.valueAsNumber, left.valueAsNumber]
     };
     prefs.entries.push(object);
-    chrome.storage.local.set(prefs, () => add(object));
+    chrome.storage.local.set(prefs, () => {
+      add(object, true);
+      counter();
+    });
   });
 
   // displays
