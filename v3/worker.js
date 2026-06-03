@@ -1,11 +1,25 @@
 'use strict';
 
-const resize = (id, top, right, bottom, left) => {
+const resize = async (id, top, right, bottom, left) => {
+  const win = await chrome.windows.get(id);
+  const displays = await chrome.system.display.getInfo();
+
+  const display = displays.find(d => {
+    const {left, top, width, height} = d.bounds;
+
+    return (
+      win.left >= left &&
+      win.left < left + width &&
+      win.top >= top &&
+      win.top < top + height
+    );
+  }) || displays[0];
+
   const box = {
-    left: parseInt(screen.availLeft + Number(left) / 100 * screen.availWidth),
-    top: parseInt(screen.availTop + Number(top) / 100 * screen.availHeight),
-    width: parseInt(Number(right - left) / 100 * screen.availWidth),
-    height: parseInt(Number(bottom - top) / 100 * screen.availHeight)
+    left: parseInt(display.workArea.left + Number(left) / 100 * display.workArea.width),
+    top: parseInt(display.workArea.top + Number(top) / 100 * display.workArea.height),
+    width: parseInt(Number(right - left) / 100 * display.workArea.width),
+    height: parseInt(Number(bottom - top) / 100 * display.workArea.height)
   };
 
   chrome.storage.local.get({
@@ -117,6 +131,18 @@ chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
     });
   }
 }));
+
+chrome.windows.onCreated.addListener(win => chrome.storage.local.get({
+  'startup-size': [],
+  'resize-new-window': true
+}).then(prefs => {
+  if (prefs['resize-new-window'] && prefs['startup-size'].length) {
+    const [top, right, bottom, left] = prefs['startup-size'];
+    resize(win.id, top, right, bottom, left);
+  }
+}), {
+  windowTypes: ['normal']
+});
 
 /* FAQs & Feedback */
 {

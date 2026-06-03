@@ -11,6 +11,7 @@ const r = {
 
 chrome.storage.local.get({
   'startup-size': [],
+  'resize-new-window': true,
   'validate': true
 }, prefs => {
   if (prefs['startup-size'].length) {
@@ -21,6 +22,7 @@ chrome.storage.local.get({
   }
   document.getElementById('validate').checked = prefs.validate === false;
   document.getElementById('validate').dispatchEvent(new Event('change'));
+  document.getElementById('resize-new-window').checked = prefs['resize-new-window'];
 });
 
 document.getElementById('validate').onchange = e => {
@@ -95,7 +97,8 @@ document.addEventListener('submit', e => {
       Number(r.right.value),
       Number(r.bottom.value),
       Number(r.left.value)
-    ]
+    ],
+    'resize-new-window': document.getElementById('resize-new-window').checked
   }, () => {
     toast.textContent = 'Options Saved';
     window.setTimeout(() => toast.textContent = '', 750);
