@@ -1,6 +1,12 @@
 {
   "manifest_version": 3,
   "version": "0.2.6",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "window-resizer@webextension.org",
+      "strict_min_version": "121.0"
+    }
+  },
   "name": "Window Resizer",
   "description": "__MSG_description__",
   "default_locale": "en",
@@ -22,6 +28,10 @@
   },
   "homepage_url": "https://webextension.org/listing/window-resizer.html",
   "background": {
+    "scripts": [
+      "polyfill.js",
+      "worker.js"
+    ],
     "service_worker": "worker.js"
   },
   "commands": {
@@ -46,5 +56,14 @@
   },
   "options_ui": {
     "page": "/data/options/index.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{c7eb9f55-8689-4b04-ae7c-2893920275c3}",
+      "strict_min_version": "148.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
   }
 }
