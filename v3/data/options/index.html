@@ -7,15 +7,22 @@
 <body>
   <form>
     <p>Resize active window on browser or extension restarts:</p>
+    <p>
+      <label for="unit">Unit: </label>
+      <select id="unit">
+        <option value="%">Percent (%)</option>
+        <option value="px">Pixels (px)</option>
+      </select>
+    </p>
     <div class="box">
       <input type="number" required name="top" min=0 max=100 placeholder="Top">
-      %
+      <span class="unit">%</span>
       <input type="number" required name="left" min=0 max=100 placeholder="Left">
-      %
+      <span class="unit">%</span>
       <input type="number" required name="bottom" min=0 max=100 placeholder="Bottom">
-      %
+      <span class="unit">%</span>
       <input type="number" required name="right" min=0 max=100 placeholder="Right">
-      %
+      <span class="unit">%</span>
     </div>
 
     <p class="two">
@@ -32,7 +39,7 @@
 
     <p class="two">
       <input type="checkbox" id="validate">
-      <label for="validate">Allow negative percents for margins</label>
+      <label for="validate">Allow negative values for margins</label>
     </p>
 
     <p>

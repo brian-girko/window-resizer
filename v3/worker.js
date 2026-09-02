@@ -1,6 +1,6 @@
 'use strict';
 
-const resize = async (id, top, right, bottom, left) => {
+const resize = async (id, top, right, bottom, left, unit = '%') => {
   const win = await chrome.windows.get(id);
   const displays = await chrome.system.display.getInfo();
 
@@ -15,7 +15,12 @@ const resize = async (id, top, right, bottom, left) => {
     );
   }) || displays[0];
 
-  const box = {
+  const box = unit === 'px' ? {
+    left: parseInt(display.workArea.left + Number(left)),
+    top: parseInt(display.workArea.top + Number(top)),
+    width: parseInt(Number(right) - Number(left)),
+    height: parseInt(Number(bottom) - Number(top))
+  } : {
     left: parseInt(display.workArea.left + Number(left) / 100 * display.workArea.width),
     top: parseInt(display.workArea.top + Number(top) / 100 * display.workArea.height),
     width: parseInt(Number(right - left) / 100 * display.workArea.width),
@@ -77,6 +82,7 @@ chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
         args.append('left', left);
         args.append('right', right);
         args.append('bottom', bottom);
+        args.append('unit', entry.unit || '%');
 
         chrome.windows.create({
           url: '/data/commander/index.html?' + args.toString(),
@@ -116,7 +122,8 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
 // startup
 chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
-  'startup-size': []
+  'startup-size': [],
+  'startup-unit': '%'
 }, prefs => {
   if (prefs['startup-size'].length) {
     chrome.tabs.query({
@@ -126,7 +133,7 @@ chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
       if (tabs.length) {
         const [top, right, bottom, left] = prefs['startup-size'];
 
-        resize(tabs[0].windowId, top, right, bottom, left);
+        resize(tabs[0].windowId, top, right, bottom, left, prefs['startup-unit']);
       }
     });
   }
@@ -134,11 +141,12 @@ chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
 
 chrome.windows.onCreated.addListener(win => chrome.storage.local.get({
   'startup-size': [],
+  'startup-unit': '%',
   'resize-new-window': true
 }).then(prefs => {
   if (prefs['resize-new-window'] && prefs['startup-size'].length) {
     const [top, right, bottom, left] = prefs['startup-size'];
-    resize(win.id, top, right, bottom, left);
+    resize(win.id, top, right, bottom, left, prefs['startup-unit']);
   }
 }), {
   windowTypes: ['normal']

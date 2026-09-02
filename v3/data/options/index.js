@@ -1,6 +1,7 @@
 'use strict';
 
 const toast = document.getElementById('toast');
+const unitSelect = document.getElementById('unit');
 
 const r = {
   left: document.querySelector('[name=left]'),
@@ -9,46 +10,63 @@ const r = {
   bottom: document.querySelector('[name=bottom]')
 };
 
-chrome.storage.local.get({
+const prefs = {
   'startup-size': [],
+  'startup-unit': '%',
   'resize-new-window': true,
   'validate': true
-}, prefs => {
+};
+
+const applyConstraints = () => {
+  const unit = unitSelect.value;
+
+  for (const input of Object.values(r)) {
+    input.removeAttribute('min');
+    input.removeAttribute('max');
+  }
+  if (prefs.validate !== false) {
+    for (const input of Object.values(r)) {
+      input.setAttribute('min', 0);
+    }
+    if (unit === '%') {
+      for (const input of Object.values(r)) {
+        input.setAttribute('max', 100);
+      }
+    }
+  }
+};
+
+const updateUnits = () => {
+  document.querySelectorAll('.unit').forEach(span => span.textContent = unitSelect.value);
+};
+
+chrome.storage.local.get(prefs, ps => {
+  Object.assign(prefs, ps);
+
   if (prefs['startup-size'].length) {
     r.top.value = prefs['startup-size'][0];
     r.right.value = prefs['startup-size'][1];
     r.bottom.value = prefs['startup-size'][2];
     r.left.value = prefs['startup-size'][3];
   }
+  unitSelect.value = prefs['startup-unit'] || '%';
+  updateUnits();
+  applyConstraints();
   document.getElementById('validate').checked = prefs.validate === false;
-  document.getElementById('validate').dispatchEvent(new Event('change'));
   document.getElementById('resize-new-window').checked = prefs['resize-new-window'];
 });
 
 document.getElementById('validate').onchange = e => {
+  prefs.validate = e.target.checked === false;
   chrome.storage.local.set({
-    'validate': e.target.checked === false
+    'validate': prefs.validate
   });
-  if (e.target.checked) {
-    r.left.removeAttribute('min');
-    r.left.removeAttribute('max');
-    r.top.removeAttribute('min');
-    r.top.removeAttribute('max');
-    r.right.removeAttribute('min');
-    r.right.removeAttribute('max');
-    r.bottom.removeAttribute('min');
-    r.bottom.removeAttribute('max');
-  }
-  else {
-    r.left.setAttribute('min', 0);
-    r.left.setAttribute('max', 100);
-    r.top.setAttribute('min', 0);
-    r.top.setAttribute('max', 100);
-    r.right.setAttribute('min', 0);
-    r.right.setAttribute('max', 100);
-    r.bottom.setAttribute('min', 0);
-    r.bottom.setAttribute('max', 100);
-  }
+  applyConstraints();
+};
+
+unitSelect.onchange = () => {
+  updateUnits();
+  applyConstraints();
 };
 
 // reset
@@ -98,6 +116,7 @@ document.addEventListener('submit', e => {
       Number(r.bottom.value),
       Number(r.left.value)
     ],
+    'startup-unit': unitSelect.value,
     'resize-new-window': document.getElementById('resize-new-window').checked
   }, () => {
     toast.textContent = 'Options Saved';
@@ -112,10 +131,10 @@ document.addEventListener('input', () => {
   const tv = Number(r.top.value);
 
   if (isNaN(lv) === false && isNaN(rv) === false) {
-    r.left.setCustomValidity(lv >= rv ? 'Need to be smaller than the right percent' : '');
+    r.left.setCustomValidity(lv >= rv ? 'Need to be smaller than the right value' : '');
   }
   if (isNaN(tv) === false && isNaN(bv) === false) {
-    r.top.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom percent' : '');
+    r.top.setCustomValidity(tv >= bv ? 'Need to be smaller than the bottom value' : '');
   }
 });
 

@@ -47,6 +47,7 @@ a:visited {
 p {
   display: flex;
   gap: 5px;
+  align-items: center;
 }
 
 .two {

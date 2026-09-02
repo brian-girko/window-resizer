@@ -5,10 +5,16 @@ const args = new URLSearchParams(location.search);
   const top = args.get('top');
   const right = args.get('right');
   const bottom = args.get('bottom');
+  const unit = args.get('unit') || '%';
 
   const id = parseInt(args.get('id'));
 
-  const box = {
+  const box = unit === 'px' ? {
+    left: parseInt(screen.availLeft + Number(left)),
+    top: parseInt(screen.availTop + Number(top)),
+    width: parseInt(Number(right) - Number(left)),
+    height: parseInt(Number(bottom) - Number(top))
+  } : {
     left: parseInt(screen.availLeft + Number(left) / 100 * screen.availWidth),
     top: parseInt(screen.availTop + Number(top) / 100 * screen.availHeight),
     width: parseInt(Number(right - left) / 100 * screen.availWidth),

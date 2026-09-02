@@ -21,18 +21,24 @@
         <label for="display" class="gap">Display: </label>
         <select id="display" class="gap"></select>
         <span></span>
+        <label for="unit" class="gap">Unit: </label>
+        <select id="unit" class="gap">
+          <option value="%">Percent (%)</option>
+          <option value="px">Pixels (px)</option>
+        </select>
+        <span></span>
         <span>Top</span>
         <input type="number" required name="top" min=0 max=100>
-        <span>%</span>
+        <span class="unit">%</span>
         <span>Left</span>
         <input type="number" required name="left" min=0 max=100>
-        <span>%</span>
+        <span class="unit">%</span>
         <span>Bottom</span>
         <input type="number" required name="bottom" min=0 max=100>
-        <span>%</span>
+        <span class="unit">%</span>
         <span>Right</span>
         <input type="number" required name="right" min=0 max=100>
-        <span>%</span>
+        <span class="unit">%</span>
       </div>
       <input type="submit" value="Add">
     </form>
