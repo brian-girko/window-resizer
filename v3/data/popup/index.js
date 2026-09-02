@@ -190,19 +190,24 @@ chrome.storage.local.get(prefs, ps => {
   });
 });
 
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const command = e.target.dataset.command;
   if (command === 'remove') {
     const target = e.target.closest('.dragable');
     const [unit, top, right, bottom, left] = target.dataset.id.split(',');
+
     prefs.entries = prefs.entries.filter(({size, unit: u = '%'}) => {
       return size[3] !== Number(left) || size[0] !== Number(top) || size[2] !== Number(bottom) || size[1] !== Number(right) || (u || '%') !== unit;
     });
     if (prefs.entries.length > 0) {
-      chrome.storage.local.set(prefs, () => {
-        target.remove();
-        counter();
-      });
+      const size = `(${top},${left}) - (${bottom},${right}) ${unit}`;
+
+      if (confirm(`Are you sure you want to remove ` + size + ' resizing command?')) {
+        chrome.storage.local.set(prefs, () => {
+          target.remove();
+          counter();
+        });
+      }
     }
     else {
       alert('Cannot remove the last entry');
@@ -224,23 +229,28 @@ document.addEventListener('click', e => {
       height: parseInt(Number(bottom - top) / 100 * display.height)
     };
 
-    chrome.storage.local.get({
+    const prefs = await chrome.storage.local.get({
       'Win': {
         pw: 16,
         ph: 14
       }
-    }, prefs => {
-      const padding = prefs[navigator.platform.substr(0, 3)];
-      if (padding) {
-        box.left -= padding.pw / 2;
-        box.width += padding.pw;
-        box.height += padding.ph / 2;
-      }
-      chrome.runtime.sendMessage({
-        method: 'resize',
-        ...box
-      }, () => window.close());
     });
+    const padding = prefs[navigator.platform.substr(0, 3)];
+    if (padding) {
+      box.left -= padding.pw / 2;
+      box.width += padding.pw;
+      box.height += padding.ph / 2;
+    }
+    const b = await chrome.runtime.sendMessage({
+      method: 'resize',
+      ...box
+    });
+    if (b === true) {
+      window.close();
+    }
+    else {
+      alert(b);
+    }
   }
 });
 document.addEventListener('transitionend', e => {
@@ -267,6 +277,22 @@ document.addEventListener('transitionend', e => {
       size: [inputs.top.valueAsNumber, inputs.right.valueAsNumber, inputs.bottom.valueAsNumber, inputs.left.valueAsNumber],
       unit: unitSelect.value
     };
+    // is this a new size?
+    for (const o of prefs.entries) {
+      o.unit = o.unit || '%';
+
+      if (o.unit === object.unit) {
+        if (
+          o.size[0] === object.size[0] &&
+          o.size[1] === object.size[1] &&
+          o.size[2] === object.size[2] &&
+          o.size[3] === object.size[3]
+        ) {
+          return alert('This size is already stored');
+        }
+      }
+    }
+
     prefs.entries.push(object);
     chrome.storage.local.set(prefs, () => {
       add(object, true);

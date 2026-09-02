@@ -99,20 +99,27 @@ chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
 
 // message
 chrome.runtime.onMessage.addListener((request, sender, response) => {
+  console.log(request);
+
   if (request.method === 'resize') {
     chrome.tabs.query({
       active: true,
       currentWindow: true
     }, tabs => {
       if (tabs.length) {
-        setTimeout(() => chrome.windows.update(tabs[0].windowId, {
+        chrome.windows.update(tabs[0].windowId, {
           left: request.left,
           top: request.top,
           width: request.width,
           height: request.height,
           state: 'normal'
-        }), 100);
-        response(true);
+        }).then(() => response(true)).catch(e => {
+          console.error(e, e.message);
+          response(e.message);
+        });
+      }
+      else {
+        response('cannot detect the active tab');
       }
     });
 
