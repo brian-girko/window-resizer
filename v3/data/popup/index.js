@@ -10,8 +10,8 @@ const inputs = {
   bottom: document.querySelector('#add [name=bottom]')
 };
 const prefs = {
-  color: 'rgba(0, 0, 255, 0.1)',
-  entries: [{
+  'color': 'rgba(0, 0, 255, 0.1)',
+  'entries': [{
     size: [0, 100, 100, 0]
   }, {
     size: [0, 50, 50, 0]
@@ -30,7 +30,7 @@ const prefs = {
   }, {
     size: [0, 100, 100, 50]
   }],
-  validate: true,
+  'validate': true,
   'popup-unit': '%'
 };
 
@@ -141,9 +141,9 @@ chrome.storage.local.get(prefs, ps => {
   Object.assign(prefs, ps);
   unitSelect.value = prefs['popup-unit'] || '%';
 
-  // displays
-  chrome.system.display.getInfo({}, info => {
+  const updateDisplays = info => chrome.windows.getCurrent(win => {
     const select = document.getElementById('display');
+    select.options.length = 0;
 
     for (const o of info) {
       const option = document.createElement('option');
@@ -153,40 +153,46 @@ chrome.storage.local.get(prefs, ps => {
       select.appendChild(option);
     }
 
-    chrome.windows.getCurrent(win => {
-      // center position must be within the window (position of the action button)
-      const o = info.filter(o => {
-        const x = win.left + win.width / 2;
-        const y = win.top + win.height / 2;
-        return x >= o.workArea.left && x <= o.workArea.left + o.workArea.width &&
-          y >= o.workArea.top && y <= o.workArea.top + o.workArea.height;
-      }).shift() || info[0];
+    // center position must be within the window (position of the action button)
+    const o = info.filter(o => {
+      const x = win.left + win.width / 2;
+      const y = win.top + win.height / 2;
+      return x >= o.workArea.left && x <= o.workArea.left + o.workArea.width &&
+        y >= o.workArea.top && y <= o.workArea.top + o.workArea.height;
+    }).shift() || info[0];
 
-      select.options[info.indexOf(o)].selected = true;
-      workArea = o.workArea;
-      currentWin = win;
+    select.options[info.indexOf(o)].selected = true;
+    workArea = o.workArea;
+    currentWin = win;
 
-      applyUnitUI();
-      render();
+    applyUnitUI();
+    render();
+  });
 
-      Sortable.create(document.getElementById('monitor'), {
-        handle: '.dragable',
-        animation: 150,
-        store: {
-          set(sortable) {
-            const order = sortable.toArray();
-            prefs.entries = order.map(s => {
-              const [unit, top, right, bottom, left] = s.split(',');
-              return {
-                size: [Number(top), Number(right), Number(bottom), Number(left)],
-                unit
-              };
-            });
-            chrome.storage.local.set(prefs);
-          }
+  chrome.system.display.getInfo({}, info => {
+    updateDisplays(info);
+
+    Sortable.create(document.getElementById('monitor'), {
+      handle: '.dragable',
+      animation: 150,
+      store: {
+        set(sortable) {
+          const order = sortable.toArray();
+          prefs.entries = order.map(s => {
+            const [unit, top, right, bottom, left] = s.split(',');
+            return {
+              size: [Number(top), Number(right), Number(bottom), Number(left)],
+              unit
+            };
+          });
+          chrome.storage.local.set(prefs);
         }
-      });
+      }
     });
+
+    if (chrome.system.display.onDisplayChanged) {
+      chrome.system.display.onDisplayChanged.addListener(() => chrome.system.display.getInfo({}, updateDisplays));
+    }
   });
 });
 
@@ -216,6 +222,31 @@ document.addEventListener('click', async e => {
   else if (command === 'change') {
     const [unit, top, right, bottom, left] = e.target.dataset.id.split(',');
     const display = JSON.parse(document.getElementById('display').value);
+    const win = await chrome.windows.getCurrent();
+    const x = win.left + win.width / 2;
+    const y = win.top + win.height / 2;
+    const cross = x < display.left || x > display.left + display.width ||
+      y < display.top || y > display.top + display.height;
+
+    if (cross && chrome.system.display && chrome.system.display.__polyfilled) {
+      const args = new URLSearchParams();
+      args.append('id', win.id);
+      args.append('top', top);
+      args.append('left', left);
+      args.append('right', right);
+      args.append('bottom', bottom);
+      args.append('unit', unit);
+      await chrome.windows.create({
+        url: '/data/commander/index.html?' + args.toString(),
+        width: 300,
+        height: 300,
+        left: parseInt(display.left + display.width / 2 - 150),
+        top: parseInt(display.top + display.height / 2 - 150),
+        type: 'popup'
+      });
+      window.close();
+      return;
+    }
 
     const box = unit === 'px' ? {
       left: parseInt(display.left + Number(left)),

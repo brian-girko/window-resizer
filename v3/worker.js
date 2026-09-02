@@ -1,7 +1,31 @@
 'use strict';
 
+const spawnCommander = (win, top, right, bottom, left, unit = '%') => {
+  const args = new URLSearchParams();
+  args.append('id', win.id);
+  args.append('top', top);
+  args.append('left', left);
+  args.append('right', right);
+  args.append('bottom', bottom);
+  args.append('unit', unit);
+
+  return chrome.windows.create({
+    url: '/data/commander/index.html?' + args.toString(),
+    width: 300,
+    height: 300,
+    left: parseInt(win.left + win.width / 2 - 150),
+    top: parseInt(win.top + win.height / 2 - 150),
+    type: 'popup'
+  });
+};
+
 const resize = async (id, top, right, bottom, left, unit = '%') => {
   const win = await chrome.windows.get(id);
+
+  if (chrome.system.display && chrome.system.display.__polyfilled) {
+    return spawnCommander(win, top, right, bottom, left, unit);
+  }
+
   const displays = await chrome.system.display.getInfo();
 
   const display = displays.find(d => {
@@ -46,61 +70,45 @@ const resize = async (id, top, right, bottom, left, unit = '%') => {
   });
 };
 
-chrome.commands.onCommand.addListener(command => chrome.storage.local.get({
-  'entries': [{
-    size: [0, 100, 100, 0]
-  }, {
-    size: [0, 50, 50, 0]
-  }, {
-    size: [0, 100, 50, 50]
-  }, {
-    size: [50, 50, 100, 0]
-  }, {
-    size: [50, 100, 100, 50]
-  }, {
-    size: [0, 100, 50, 0]
-  }, {
-    size: [50, 100, 100, 0]
-  }, {
-    size: [0, 50, 100, 0]
-  }, {
-    size: [0, 100, 100, 50]
-  }]
-}, prefs => {
+chrome.commands.onCommand.addListener(async command => {
+  const prefs = await chrome.storage.local.get({
+    'entries': [{
+      size: [0, 100, 100, 0]
+    }, {
+      size: [0, 50, 50, 0]
+    }, {
+      size: [0, 100, 50, 50]
+    }, {
+      size: [50, 50, 100, 0]
+    }, {
+      size: [50, 100, 100, 50]
+    }, {
+      size: [0, 100, 50, 0]
+    }, {
+      size: [50, 100, 100, 0]
+    }, {
+      size: [0, 50, 100, 0]
+    }, {
+      size: [0, 100, 100, 50]
+    }]
+  });
   const index = Number(command.replace('layout-', ''));
   const entry = prefs.entries[index];
   if (entry) {
-    chrome.tabs.query({
+    const tabs = await chrome.tabs.query({
       active: true,
       currentWindow: true
-    }, tabs => {
-      if (tabs.length) {
-        const [top, right, bottom, left] = entry.size;
-        const args = new URLSearchParams();
-        args.append('id', tabs[0].windowId);
-        args.append('top', top);
-        args.append('left', left);
-        args.append('right', right);
-        args.append('bottom', bottom);
-        args.append('unit', entry.unit || '%');
-
-        chrome.windows.create({
-          url: '/data/commander/index.html?' + args.toString(),
-          width: 300,
-          height: 300,
-          left: 0,
-          top: 0,
-          type: 'popup'
-        });
-      }
     });
+    if (tabs.length) {
+      const [top, right, bottom, left] = entry.size;
+      const win = await chrome.windows.get(tabs[0].windowId);
+      spawnCommander(win, top, right, bottom, left, entry.unit || '%');
+    }
   }
-}));
+});
 
 // message
 chrome.runtime.onMessage.addListener((request, sender, response) => {
-  console.log(request);
-
   if (request.method === 'resize') {
     chrome.tabs.query({
       active: true,
@@ -114,7 +122,6 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
           height: request.height,
           state: 'normal'
         }).then(() => response(true)).catch(e => {
-          console.error(e, e.message);
           response(e.message);
         });
       }
@@ -146,17 +153,20 @@ chrome.runtime.onStartup.addListener(() => chrome.storage.local.get({
   }
 }));
 
-chrome.windows.onCreated.addListener(win => chrome.storage.local.get({
-  'startup-size': [],
-  'startup-unit': '%',
-  'resize-new-window': true
-}).then(prefs => {
-  if (prefs['resize-new-window'] && prefs['startup-size'].length) {
-    const [top, right, bottom, left] = prefs['startup-size'];
-    resize(win.id, top, right, bottom, left, prefs['startup-unit']);
+chrome.windows.onCreated.addListener(win => {
+  if (win.type !== 'normal') {
+    return;
   }
-}), {
-  windowTypes: ['normal']
+  chrome.storage.local.get({
+    'startup-size': [],
+    'startup-unit': '%',
+    'resize-new-window': true
+  }).then(prefs => {
+    if (prefs['resize-new-window'] && prefs['startup-size'].length) {
+      const [top, right, bottom, left] = prefs['startup-size'];
+      resize(win.id, top, right, bottom, left, prefs['startup-unit']);
+    }
+  });
 });
 
 /* FAQs & Feedback */

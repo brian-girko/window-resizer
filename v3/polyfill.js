@@ -43,9 +43,26 @@
     };
   };
 
+  const signature = () => JSON.stringify([
+    number(s && s.width, 0),
+    number(s && s.height, 0),
+    number(s && s.availWidth, 0),
+    number(s && s.availHeight, 0),
+    number(s && s.availLeft, 0),
+    number(s && s.availTop, 0)
+  ]);
+
+  const seen = new Map();
+
+  const displays = () => {
+    const display = build();
+    seen.set(signature(), display);
+    return [display, ...[...seen.values()].filter(d => d !== display)];
+  };
+
   const getInfo = (options, callback) => {
     const cb = typeof options === 'function' ? options : callback;
-    const promise = Promise.resolve([build()]);
+    const promise = Promise.resolve(displays());
     if (typeof cb === 'function') {
       promise.then(info => cb(info), e => console.error(e));
       return;
@@ -53,8 +70,41 @@
     return promise;
   };
 
+  const listeners = new Set();
+
+  const onDisplayChanged = {
+    addListener: fn => listeners.add(fn),
+    removeListener: fn => listeners.delete(fn),
+    hasListener: fn => listeners.has(fn)
+  };
+
+  const emit = () => {
+    for (const fn of [...listeners]) {
+      try {
+        fn();
+      }
+      catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  if (s && typeof window.addEventListener === 'function') {
+    let last = signature();
+
+    window.addEventListener('resize', () => {
+      const current = signature();
+      if (current !== last) {
+        last = current;
+        emit();
+      }
+    });
+  }
+
   chrome.system = chrome.system || {};
   chrome.system.display = {
-    getInfo
+    getInfo,
+    onDisplayChanged,
+    __polyfilled: true
   };
 })();

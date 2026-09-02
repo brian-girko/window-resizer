@@ -9,14 +9,17 @@ const args = new URLSearchParams(location.search);
 
   const id = parseInt(args.get('id'));
 
+  const availLeft = screen.availLeft || 0;
+  const availTop = screen.availTop || 0;
+
   const box = unit === 'px' ? {
-    left: parseInt(screen.availLeft + Number(left)),
-    top: parseInt(screen.availTop + Number(top)),
+    left: parseInt(availLeft + Number(left)),
+    top: parseInt(availTop + Number(top)),
     width: parseInt(Number(right) - Number(left)),
     height: parseInt(Number(bottom) - Number(top))
   } : {
-    left: parseInt(screen.availLeft + Number(left) / 100 * screen.availWidth),
-    top: parseInt(screen.availTop + Number(top) / 100 * screen.availHeight),
+    left: parseInt(availLeft + Number(left) / 100 * screen.availWidth),
+    top: parseInt(availTop + Number(top) / 100 * screen.availHeight),
     width: parseInt(Number(right - left) / 100 * screen.availWidth),
     height: parseInt(Number(bottom - top) / 100 * screen.availHeight)
   };
