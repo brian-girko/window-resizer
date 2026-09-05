@@ -131,6 +131,9 @@ chrome.runtime.onMessage.addListener((request, sender, response) => {
 
     return true;
   }
+  else if (request.method === 'log') {
+    console.log(request);
+  }
 });
 
 // startup
