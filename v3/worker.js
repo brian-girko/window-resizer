@@ -51,22 +51,21 @@ const resize = async (id, top, right, bottom, left, unit = '%') => {
     height: parseInt(Number(bottom - top) / 100 * display.workArea.height)
   };
 
-  chrome.storage.local.get({
+  const prefs = await chrome.storage.local.get({
     'Win': {
       pw: 16,
       ph: 14
     }
-  }, prefs => {
-    const padding = prefs[navigator.platform.substr(0, 3)];
-    if (padding) {
-      box.left -= padding.pw / 2;
-      box.width += padding.pw;
-      box.height += padding.ph / 2;
-    }
-    chrome.windows.update(id, {
-      state: 'normal',
-      ...box
-    });
+  });
+  const padding = prefs[navigator.platform.substr(0, 3)];
+  if (padding) {
+    box.left -= padding.pw / 2;
+    box.width += padding.pw;
+    box.height += padding.ph / 2;
+  }
+  await chrome.windows.update(id, {
+    state: 'normal',
+    ...box
   });
 };
 

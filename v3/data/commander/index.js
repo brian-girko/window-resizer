@@ -36,9 +36,11 @@ const args = new URLSearchParams(location.search);
       box.width += padding.pw;
       box.height += padding.ph / 2;
     }
+    // on Firefox, polyfill.js wraps windows.update to verify+correct geometry
+    // (see polyfill.js); this plain call is all that is needed
     chrome.windows.update(id, {
       state: 'normal',
       ...box
-    }, () => window.close());
+    }).catch(() => {}).then(() => window.close());
   });
 }
